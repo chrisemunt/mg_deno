@@ -26,6 +26,17 @@
    ----------------------------------------------------------------------------
 */
 
+/*
+   Development Diary (in brief):
+
+Version 1.0.1 27 May 2022:
+   First release.
+
+Version 1.1.2 15 June 2022:
+   Introduce the mglobal and mclass classes - designed to be compatible with the equivalent classes in mg-dbx.
+
+*/
+
 #include "mg_deno.h"
 #include "mg_dba.h"
 
@@ -84,7 +95,7 @@ MGDENO_EXTFUN(char *) mgdeno_dbversion(void)
 }
 
 
-MGDENO_EXTFUN(char *) mgdeno_command(unsigned char *input, int input_len, int command)
+MGDENO_EXTFUN(char *) mgdeno_command(unsigned char *input, int input_len, int command, int context)
 {
    int dsort, dtype;
    unsigned long len;
@@ -121,11 +132,9 @@ MGDENO_EXTFUN(char *) mgdeno_command(unsigned char *input, int input_len, int co
       case DBX_CMND_GINCREMENT:
          dbx_increment(input, output);
          break;
-/*
       case DBX_CMND_GMERGE:
          dbx_merge(input, output);
          break;
-*/
       case DBX_CMND_GLOCK:
          dbx_lock(input, output);
          break;
@@ -179,6 +188,16 @@ MGDENO_EXTFUN(char *) mgdeno_command(unsigned char *input, int input_len, int co
       output[len + 5] = '\0';
    }
 
-   return (output + 5);
+   return output;
+}
+
+
+MGDENO_EXTFUN(char *) mgdeno_benchmark(unsigned char *input, int input_len, int command, int context)
+{
+   char *output;
+
+   output = (unsigned char *) gbuffer;
+   strcpy(output, "output string");
+   return output;
 }
 

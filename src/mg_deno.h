@@ -30,13 +30,13 @@
 #define MG_DENO_H
 
 #define MAJORVERSION             1
-#define MINORVERSION             0
-#define MAINTVERSION             1
-#define BUILDNUMBER              1
+#define MINORVERSION             1
+#define MAINTVERSION             2
+#define BUILDNUMBER              2
 
 #define MGDENO_VERSION_MAJOR     "1"
-#define MGDENO_VERSION_MINOR     "0"
-#define MGDENO_VERSION_BUILD     "1"
+#define MGDENO_VERSION_MINOR     "1"
+#define MGDENO_VERSION_BUILD     "2"
 
 #define MGDENO_VERSION           MGDENO_VERSION_MAJOR "." MGDENO_VERSION_MINOR "." MGDENO_VERSION_BUILD
 #define MGDENO_COMPANYNAME       "M/Gateway Developments Ltd\0"
@@ -67,6 +67,12 @@
 #else
 #define MGDENO_EXTFUN(a)    a
 #endif
+
+MGDENO_EXTFUN(void)     mgdeno_init       (void);
+MGDENO_EXTFUN(char *)   mgdeno_version    (void);
+MGDENO_EXTFUN(char *)   mgdeno_dbversion  (void);
+MGDENO_EXTFUN(char *)   mgdeno_command    (unsigned char *input, int input_len, int command, int context);
+MGDENO_EXTFUN(char *)   mgdeno_benchmark  (unsigned char *input, int input_len, int command, int context);
 
 #endif
 

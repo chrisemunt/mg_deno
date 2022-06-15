@@ -823,6 +823,7 @@ typedef struct tagDBXCVAL {
 
 typedef struct tagDBXVAL {
    short          type;
+   short          sort; /* v1.3.16 */
    short          realloc;
    union {
       int            int32;
@@ -1061,6 +1062,7 @@ typedef struct tagDBXMETH {
    short          done;
    short          lock;
    short          increment;
+   short          merge;
    short          getdata; /* v1.3.13 */
    int            binary;
    int            argc;
@@ -1211,6 +1213,9 @@ DBX_EXTFUN(int)         dbx_defined_ex                (DBXMETH *pmeth);
 DBX_EXTFUN(int)         dbx_increment                 (unsigned char *input, unsigned char *output);
 DBX_EXTFUN(int)         dbx_increment_x               (DBXMETH *pmeth);
 DBX_EXTFUN(int)         dbx_increment_ex              (DBXMETH *pmeth);
+DBX_EXTFUN(int)         dbx_merge                     (unsigned char *input, unsigned char *output);
+DBX_EXTFUN(int)         dbx_merge_x                   (DBXMETH *pmeth);
+DBX_EXTFUN(int)         dbx_merge_ex                  (DBXMETH *pmeth);
 DBX_EXTFUN(int)         dbx_lock                      (unsigned char *input, unsigned char *output);
 DBX_EXTFUN(int)         dbx_lock_x                    (DBXMETH *pmeth);
 DBX_EXTFUN(int)         dbx_lock_ex                   (DBXMETH *pmeth);
