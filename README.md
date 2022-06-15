@@ -582,8 +582,6 @@ Example:
 
 ### Invocation of a ClassMethod
 
-Synchronous:
-
        const myclass = new mclass(db, <class_name>);
        result = myclass.classmethod(<classmethod_name>, <parameters>);
 Or:
