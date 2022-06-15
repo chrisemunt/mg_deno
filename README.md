@@ -3,7 +3,7 @@
 High speed Synchronous and Asynchronous access to InterSystems Cache/IRIS and YottaDB from Deno.
 
 Chris Munt <cmunt@mgateway.com>  
-27 May 2022, M/Gateway Developments Ltd [http://www.mgateway.com](http://www.mgateway.com)
+15 June 2022, M/Gateway Developments Ltd [http://www.mgateway.com](http://www.mgateway.com)
 
 * Two connectivity models to the InterSystems or YottaDB database are provided: High performance via the local database API or network based.
 * The status of this module is very much 'work in progress' - use with care!  In the fullness of time, it is envisaged that **mg\_deno** will contain the same functionality as, and be compatible with, **mg-dbx** (our addon for Node.js).
@@ -17,6 +17,7 @@ Contents
 * [Invocation of database commands](#DBCommands)
 * [Invocation of database functions](#DBFunctions)
 * [Transaction Processing](#TProcessing)
+* [Direct access to InterSystems classes (IRIS and Cache)](#DBClasses)
 * [License](#License)
 
 ## <a name="PreReq"></a> Pre-requisites 
@@ -146,10 +147,22 @@ The first step is to import the **mg\_deno** server class to to your Deno script
 
        import {server} from './mg_deno.ts';
 
+And optionally (as required):
+
+       import {mglobal} from './mg_deno.ts';
+       import {mclass} from './mg_deno.ts';
+
 ### Create a Server Object
 
        const db = new server();
 
+### Invoking Deno code using mg\_deno
+
+**mg\_deno** relies on the Deno _Foreign Function Interface_ (FFI) to bind to the back-end database.  Access to this functionality must be explicitly requested using the '--allow-ffi' option.  Also, because the FFI is at the 'bleeding edge' of Deno development the '--unstable' option must also be included - at least for now.
+
+For example:
+
+       deno run --allow-ffi --unstable mydenocode.ts
 
 ### Open a connection to the database
 
@@ -272,7 +285,27 @@ Example 2 (Change the current Namespace):
 
 ## <a name="DBCommands"></a> Invocation of database commands
 
+### Register a global name (and fixed key)
+
+It is not necessary to create a global object to represent a M global name and fixed key (if any), but this method does give better performance - particularly in cases where the same global reference is repeatedly used.
+ 
+       const global = new mglobal(db, <global_name>[, <fixed_key>]);
+
+Example (using a global named "Person"):
+
+       const person = new mglobal("Person");
+
 ### Set a record
+
+_Using a global object:_
+
+       var result = global.set(<key>, <data>);
+      
+Example:
+
+       person.set(1, "John Smith");
+
+_Alternatively:_
 
        var result = db.set(<global>, <key>, <data>);
       
@@ -282,6 +315,16 @@ Example:
 
 ### Get a record
 
+_Using a global object:_
+
+       var result = global.get(<key>);
+      
+Example:
+
+       var name = person.get(1);
+
+_Alternatively:_
+
        var result = db.get(<global>, <key>);
       
 Example:
@@ -290,23 +333,57 @@ Example:
 
 ### Delete a record
 
+_Using a global object:_
+
+       var result = global.delete(<key>);
+      
+Example:
+
+       var result = person.delete(1);
+
+_Alternatively:_
+
        var result = db.delete(<global>, <key>);
       
 Example:
 
-       var name = db.delete("person", 1);
+       var result = db.delete("person", 1);
 
 
 ### Check whether a record is defined
+
+_Using a global object:_
+
+       var result = global.defined(<key>);
+      
+Example:
+
+       var result = person.defined(1);
+
+_Alternatively:_
 
        var result = db.defined(<global>, <key>);
       
 Example:
 
-       var name = db.defined("person", 1);
+       var result = db.defined("person", 1);
 
 
 ### Parse a set of records (in order)
+
+_Using a global object:_
+
+       var result = global.next(<key>);
+      
+Example:
+
+       var key = "";
+       while ((key = person.next(key)) != "") {
+          console.log("\nPerson: " + key + ' : ' + person.get(key));
+       }
+
+
+_Alternatively:_
 
        var result = db.next(<global>, <key>);
       
@@ -320,6 +397,20 @@ Example:
 
 ### Parse a set of records (in reverse order)
 
+_Using a global object:_
+
+       var result = global.previous(<key>);
+      
+Example:
+
+       var key = "";
+       while ((key = person.previous(key)) != "") {
+          console.log("\nPerson: " + key + ' : ' + person.get(key));
+       }
+
+
+_Alternatively:_
+
        var result = db.previous(<global>, <key>);
       
 Example:
@@ -332,6 +423,16 @@ Example:
 
 ### Increment the value of a global node
 
+_Using a global object:_
+
+       var result = global.increment(<key>, <increment_value>);
+      
+Example (increment the value of the "counter" node by 1.5 and return the new value):
+
+       var result = global.increment("counter", 1.5);
+
+_Alternatively:_
+
        var result = db.increment(<global>, <key>, <increment_value>);
       
 Example (increment the value of the "counter" node by 1.5 and return the new value):
@@ -340,6 +441,16 @@ Example (increment the value of the "counter" node by 1.5 and return the new val
 
 
 ### Lock a global node
+
+_Using a global object:_
+
+       var result = global.lock(<key>, <timeout>);
+      
+Example (lock global node '1' with a timeout of 30 seconds):
+
+       var result = global.lock(1, 30);
+
+_Alternatively:_
 
        var result = db.lock(<global>, <key>, <timeout>);
       
@@ -352,11 +463,50 @@ Example (lock global node '1' with a timeout of 30 seconds):
 
 ### Unlock a (previously locked) global node
 
+_Using a global object:_
+
+       var result = global.unlock(<key>);
+      
+Example (unlock global node '1'):
+
+       var result = global.unlock(1);
+
+_Alternatively:_
+
        var result = db.unlock(<global>, <key>);
       
 Example (unlock global node '1'):
 
        var result = db.unlock("person", 1);
+
+
+### Merge (or copy) part of one global to another
+
+* Note: In order to use the 'Merge' facility with YottaDB the M support routines should be installed (**%zmgsi** and **%zmgsis**).
+
+Global objects must be used to invoke the Merge command.
+
+Merge from global2 to global1:
+
+       var result = <global1>.merge([<key1>,] <global2> [, <key2>]);
+      
+Example 1 (merge ^MyGlobal2 to ^MyGlobal1):
+
+       global1 = new mglobal(db, 'MyGlobal1');
+       global2 = new mglobal(db, 'MyGlobal2');
+       global1.merge(global2);
+
+Example 2 (merge ^MyGlobal2(0) to ^MyGlobal1(1)):
+
+       global1 = new mglobal(db, 'MyGlobal1', 1);
+       global2 = new mglobal(db, 'MyGlobal2', 0);
+       global1.merge(global2);
+
+Alternatively:
+
+       global1 = new mglobal(db, 'MyGlobal1');
+       global2 = new mglobal(db, 'MyGlobal2');
+       global1.merge(1, global2, 0);
 
 
 ## <a name="DBFunctions"></a> Invocation of database functions
@@ -428,6 +578,81 @@ Example:
        result = db.trollback();
 
 
+## <a name="DBClasses"></a> Direct access to InterSystems classes (IRIS and Cache)
+
+### Invocation of a ClassMethod
+
+Synchronous:
+
+       const myclass = new mclass(db, <class_name>);
+       result = myclass.classmethod(<classmethod_name>, <parameters>);
+Or:
+
+       result = db.classmethod(<class_name>, <classmethod_name>, <parameters>);
+      
+Example (Encode a date to internal storage format):
+
+       result = db.classmethod("%Library.Date", "DisplayToLogical", "10/10/2019");
+
+
+### Creating and manipulating instances of objects
+
+The following simple class will be used to illustrate this facility.
+
+       Class User.Person Extends %Persistent
+       {
+          Property Number As %Integer;
+          Property Name As %String;
+          Property DateOfBirth As %Date;
+          Method Age(AtDate As %Integer) As %Integer
+          {
+             Quit (AtDate - ..DateOfBirth) \ 365.25
+          }
+       }
+
+### Create an entry for a new Person
+
+       person = db.classmethod("User.Person", "%New");
+
+Add Data:
+
+       result = person.setproperty("Number", 1);
+       result = person.setproperty("Name", "John Smith");
+       result = person.setproperty("DateOfBirth", "12/8/1995");
+
+Save the object record:
+
+       result = person.method("%Save");
+
+### Retrieve an entry for an existing Person
+
+Retrieve data for object %Id of 1.
+ 
+       person = db.classmethod("User.Person", "%OpenId", 1);
+
+Return properties:
+
+       let number = person.getproperty("Number");
+       let name = person.getproperty("Name");
+       let dob = person.getproperty("DateOfBirth");
+
+Calculate person's age at a particular date:
+
+       let today = db.classmethod("%Library.Date", "DisplayToLogical", "10/10/2019");
+       let age = person.method("Age", today);
+
+### Reusing an object container
+
+Once created, it is possible to reuse containers holding previously instantiated objects using the **reset()** method.  Using this technique helps to reduce memory usage in the Deno environment.
+
+Example 1 Reset a container to hold a new instance:
+
+       person.reset("User.Person", "%New");
+
+Example 2 Reset a container to hold an existing instance (object %Id of 2):
+
+       person.reset("User.Person", "%OpenId", 2);
+
 ## <a name="License"></a> License
 
 Copyright (c) 2021-2022 M/Gateway Developments Ltd,
@@ -449,3 +674,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 ### v1.0.1 (27 May 2022)
 
 * Initial Release
+
+### v1.1.2 (15 June 2022)
+
+* Introduce the **mglobal** and **mclass** classes - designed to be compatible with the equivalent classes in **mg-dbx**.
