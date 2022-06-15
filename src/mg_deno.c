@@ -49,7 +49,7 @@ Version 1.1.2 15 June 2022:
 #include <time.h>
 #endif
 
-char gbuffer[256];
+char gbuffer[CACHE_MAXLOSTSZ + 7];
 
 #if defined(_WIN32)
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)

@@ -97,10 +97,6 @@ const dylib = Deno.dlopen(lib_name, {
                "mgdeno_benchmark": { parameters: ["pointer", "isize", "isize", "isize"], result: "pointer" },
                });
 
-export class mresult {
-
-}
-
 export class server {
    type: string = "";
    path: string = "";
