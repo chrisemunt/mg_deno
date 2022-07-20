@@ -31,12 +31,12 @@
 
 #define MAJORVERSION             1
 #define MINORVERSION             1
-#define MAINTVERSION             2
-#define BUILDNUMBER              2
+#define MAINTVERSION             3
+#define BUILDNUMBER              3
 
 #define MGDENO_VERSION_MAJOR     "1"
 #define MGDENO_VERSION_MINOR     "1"
-#define MGDENO_VERSION_BUILD     "2"
+#define MGDENO_VERSION_BUILD     "3"
 
 #define MGDENO_VERSION           MGDENO_VERSION_MAJOR "." MGDENO_VERSION_MINOR "." MGDENO_VERSION_BUILD
 #define MGDENO_COMPANYNAME       "M/Gateway Developments Ltd\0"

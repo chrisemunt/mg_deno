@@ -35,6 +35,9 @@ Version 1.0.1 27 May 2022:
 Version 1.1.2 15 June 2022:
    Introduce the mglobal and mclass classes - designed to be compatible with the equivalent classes in mg-dbx.
 
+Version 1.1.3 20 July 2022:
+   Performance improvements.
+
 */
 
 #include "mg_deno.h"
@@ -197,6 +200,10 @@ MGDENO_EXTFUN(char *) mgdeno_benchmark(unsigned char *input, int input_len, int 
    char *output;
 
    output = (unsigned char *) gbuffer;
+/*
+   printf("\r\n input_len=%d; command=%d; context=%d; %s", input_len, command, context, input);
+*/
+
    strcpy(output, "output string");
    return output;
 }

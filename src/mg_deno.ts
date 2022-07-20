@@ -28,7 +28,7 @@
 
 const DBX_VERSION_MAJOR: number     = 1;
 const DBX_VERSION_MINOR: number     = 1;
-const DBX_VERSION_BUILD: number     = 2;
+const DBX_VERSION_BUILD: number     = 3;
 
 const DBX_DSORT_INVALID: number     = 0;
 const DBX_DSORT_DATA: number        = 1;
@@ -112,6 +112,12 @@ export class server {
    timeout: number = 60;
    init: number = 0;
    index: number = 0;
+   buffer = new Array(8);
+
+   constructor(...args: any[]) {
+      this.buffer[0] = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      return;
+   }
 
    version(): string {
       const ret = dylib.symbols.mgdeno_version();
@@ -122,7 +128,7 @@ export class server {
    dbversion(): string {
       if (this.init === 0) {
          const ret = dylib.symbols.mgdeno_init();
-         this.init++;
+         this.init ++;
       }
       const ret = dylib.symbols.mgdeno_dbversion();
       const data_view = new Deno.UnsafePointerView(ret);
@@ -132,92 +138,90 @@ export class server {
    open(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.init === 0) {
          const ret = dylib.symbols.mgdeno_init();
          this.init ++;
       }
 
-      offset = block_add_size(buffer, offset, offset, DBX_DSORT_DATA, DBX_DTYPE_INT);
-      offset = block_add_size(buffer, offset, buffer.length, DBX_DSORT_DATA, DBX_DTYPE_INT);
-      offset = block_add_size(buffer, offset, this.index, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, offset, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, this.buffer.length, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, this.index, DBX_DSORT_DATA, DBX_DTYPE_INT);
 
-      offset = block_add_string(buffer, offset, this.type, this.type.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
-      offset = block_add_string(buffer, offset, this.path, this.path.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
-      offset = block_add_string(buffer, offset, this.host, this.host.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
-      offset = block_add_string(buffer, offset, this.tcp_port.toString(), this.tcp_port.toString().length, DBX_DSORT_DATA, DBX_DTYPE_INT);
-      offset = block_add_string(buffer, offset, this.username, this.username.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
-      offset = block_add_string(buffer, offset, this.password, this.password.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
-      offset = block_add_string(buffer, offset, this.namespace, this.namespace.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
-      offset = block_add_string(buffer, offset, "", 0, DBX_DSORT_DATA, DBX_DTYPE_STR);
-      offset = block_add_string(buffer, offset, "", 0, DBX_DSORT_DATA, DBX_DTYPE_STR);
-      offset = block_add_string(buffer, offset, this.debug, this.debug.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
-      offset = block_add_string(buffer, offset, this.env_vars, this.env_vars.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
-      offset = block_add_string(buffer, offset, this.server, this.server.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
-      offset = block_add_string(buffer, offset, this.server_software, this.server_software.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
-      offset = block_add_string(buffer, offset, this.timeout.toString(), this.timeout.toString().length, DBX_DSORT_DATA, DBX_DTYPE_INT);
-      offset = block_add_string(buffer, offset, "", 0, DBX_DSORT_EOD, DBX_DTYPE_STR);
-      add_head(buffer, 0, offset, DBX_CMND_OPEN);
+      offset = block_add_string(this.buffer[bidx], offset, this.type, this.type.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
+      offset = block_add_string(this.buffer[bidx], offset, this.path, this.path.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
+      offset = block_add_string(this.buffer[bidx], offset, this.host, this.host.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
+      offset = block_add_string(this.buffer[bidx], offset, this.tcp_port.toString(), this.tcp_port.toString().length, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_string(this.buffer[bidx], offset, this.username, this.username.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
+      offset = block_add_string(this.buffer[bidx], offset, this.password, this.password.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
+      offset = block_add_string(this.buffer[bidx], offset, this.namespace, this.namespace.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
+      offset = block_add_string(this.buffer[bidx], offset, "", 0, DBX_DSORT_DATA, DBX_DTYPE_STR);
+      offset = block_add_string(this.buffer[bidx], offset, "", 0, DBX_DSORT_DATA, DBX_DTYPE_STR);
+      offset = block_add_string(this.buffer[bidx], offset, this.debug, this.debug.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
+      offset = block_add_string(this.buffer[bidx], offset, this.env_vars, this.env_vars.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
+      offset = block_add_string(this.buffer[bidx], offset, this.server, this.server.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
+      offset = block_add_string(this.buffer[bidx], offset, this.server_software, this.server_software.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
+      offset = block_add_string(this.buffer[bidx], offset, this.timeout.toString(), this.timeout.toString().length, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_string(this.buffer[bidx], offset, "", 0, DBX_DSORT_EOD, DBX_DTYPE_STR);
+      add_head(this.buffer[bidx], 0, offset, DBX_CMND_OPEN);
 
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_OPEN, 0);
+      const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_OPEN, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
    }
-
 
    close(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.init === 0) {
          return "";
       }
 
-      offset = block_add_size(buffer, offset, offset, DBX_DSORT_DATA, DBX_DTYPE_INT);
-      offset = block_add_size(buffer, offset, buffer.length, DBX_DSORT_DATA, DBX_DTYPE_INT);
-      offset = block_add_size(buffer, offset, this.index, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, offset, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, this.buffer[bidx].length, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, this.index, DBX_DSORT_DATA, DBX_DTYPE_INT);
 
-      offset = block_add_string(buffer, offset, "", 0, DBX_DSORT_EOD, DBX_DTYPE_STR);
-      add_head(buffer, 0, offset, DBX_CMND_CLOSE);
+      offset = block_add_string(this.buffer[bidx], offset, "", 0, DBX_DSORT_EOD, DBX_DTYPE_STR);
+      add_head(this.buffer[bidx], 0, offset, DBX_CMND_CLOSE);
 
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_CLOSE, 0);
+      const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_CLOSE, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
    }
 
-
    current_namespace(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.init === 0) {
          return "";
       }
 
-      offset = block_add_size(buffer, offset, offset, DBX_DSORT_DATA, DBX_DTYPE_INT);
-      offset = block_add_size(buffer, offset, buffer.length, DBX_DSORT_DATA, DBX_DTYPE_INT);
-      offset = block_add_size(buffer, offset, this.index, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, offset, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, this.buffer[bidx].length, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, this.index, DBX_DSORT_DATA, DBX_DTYPE_INT);
 
       if (args.length > 0) {
-         offset = pack_arguments(buffer, offset, this.index, args, DBX_CMND_NSSET, 0);
-         const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_NSSET, 0);
+         offset = pack_arguments(this.buffer[bidx], offset, this.index, args, DBX_CMND_NSSET, 0);
+         const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_NSSET, 0);
          const data_view = new Deno.UnsafePointerView(ret);
       }
 
       offset = 0;
-      offset = block_add_size(buffer, offset, offset, DBX_DSORT_DATA, DBX_DTYPE_INT);
-      offset = block_add_size(buffer, offset, buffer.length, DBX_DSORT_DATA, DBX_DTYPE_INT);
-      offset = block_add_size(buffer, offset, this.index, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, offset, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, this.buffer[bidx].length, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, this.index, DBX_DSORT_DATA, DBX_DTYPE_INT);
 
-      offset = block_add_string(buffer, offset, "", 0, DBX_DSORT_EOD, DBX_DTYPE_STR);
-      add_head(buffer, 0, offset, DBX_CMND_NSGET);
+      offset = block_add_string(this.buffer[bidx], offset, "", 0, DBX_DSORT_EOD, DBX_DTYPE_STR);
+      add_head(this.buffer[bidx], 0, offset, DBX_CMND_NSGET);
 
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_NSGET, 0);
+      const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_NSGET, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -226,14 +230,14 @@ export class server {
    set(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.init === 0) {
          return "";
       }
 
-      offset = pack_arguments(buffer, offset, this.index, args, DBX_CMND_GSET, 0);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GSET, 0);
+      offset = pack_arguments(this.buffer[bidx], offset, this.index, args, DBX_CMND_GSET, 0);
+      const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_GSET, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -242,14 +246,14 @@ export class server {
    get(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.init === 0) {
          return "";
       }
 
-      offset = pack_arguments(buffer, offset, this.index, args, DBX_CMND_GGET, 0);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GGET, 0);
+      offset = pack_arguments(this.buffer[bidx], offset, this.index, args, DBX_CMND_GGET, 0);
+      const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_GGET, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -258,14 +262,14 @@ export class server {
    delete(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.init === 0) {
          return "";
       }
 
-      offset = pack_arguments(buffer, offset, this.index, args, DBX_CMND_GDELETE, 0);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GDELETE, 0);
+      offset = pack_arguments(this.buffer[bidx], offset, this.index, args, DBX_CMND_GDELETE, 0);
+      const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_GDELETE, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -274,14 +278,14 @@ export class server {
    defined(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.init === 0) {
          return "";
       }
 
-      offset = pack_arguments(buffer, offset, this.index, args, DBX_CMND_GDEFINED, 0);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GDEFINED, 0);
+      offset = pack_arguments(this.buffer[bidx], offset, this.index, args, DBX_CMND_GDEFINED, 0);
+      const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_GDEFINED, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -290,14 +294,14 @@ export class server {
    next(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.init === 0) {
          return "";
       }
 
-      offset = pack_arguments(buffer, offset, this.index, args, DBX_CMND_GNEXT, 0);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GNEXT, 0);
+      offset = pack_arguments(this.buffer[bidx], offset, this.index, args, DBX_CMND_GNEXT, 0);
+      const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_GNEXT, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -307,14 +311,14 @@ export class server {
    previous(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.init === 0) {
          return "";
       }
 
-      offset = pack_arguments(buffer, offset, this.index, args, DBX_CMND_GPREVIOUS, 0);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GPREVIOUS, 0);
+      offset = pack_arguments(this.buffer[bidx], offset, this.index, args, DBX_CMND_GPREVIOUS, 0);
+      const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_GPREVIOUS, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -323,14 +327,14 @@ export class server {
    increment(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.init === 0) {
          return "";
       }
 
-      offset = pack_arguments(buffer, offset, this.index, args, DBX_CMND_GINCREMENT, 0);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GINCREMENT, 0);
+      offset = pack_arguments(this.buffer[bidx], offset, this.index, args, DBX_CMND_GINCREMENT, 0);
+      const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_GINCREMENT, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -339,14 +343,14 @@ export class server {
    lock(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.init === 0) {
          return "";
       }
 
-      offset = pack_arguments(buffer, offset, this.index, args, DBX_CMND_GLOCK, 0);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GLOCK, 0);
+      offset = pack_arguments(this.buffer[bidx], offset, this.index, args, DBX_CMND_GLOCK, 0);
+      const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_GLOCK, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -355,14 +359,14 @@ export class server {
    unlock(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.init === 0) {
          return "";
       }
 
-      offset = pack_arguments(buffer, offset, this.index, args, DBX_CMND_GUNLOCK, 0);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GUNLOCK, 0);
+      offset = pack_arguments(this.buffer[bidx], offset, this.index, args, DBX_CMND_GUNLOCK, 0);
+      const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_GUNLOCK, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -371,20 +375,20 @@ export class server {
    tstart(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.init === 0) {
          return "";
       }
 
-      offset = block_add_size(buffer, offset, offset, DBX_DSORT_DATA, DBX_DTYPE_INT);
-      offset = block_add_size(buffer, offset, buffer.length, DBX_DSORT_DATA, DBX_DTYPE_INT);
-      offset = block_add_size(buffer, offset, this.index, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, offset, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, this.buffer[bidx].length, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, this.index, DBX_DSORT_DATA, DBX_DTYPE_INT);
 
-      offset = block_add_string(buffer, offset, "", 0, DBX_DSORT_EOD, DBX_DTYPE_STR);
-      add_head(buffer, 0, offset, DBX_CMND_TSTART);
+      offset = block_add_string(this.buffer[bidx], offset, "", 0, DBX_DSORT_EOD, DBX_DTYPE_STR);
+      add_head(this.buffer[bidx], 0, offset, DBX_CMND_TSTART);
 
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_TSTART, 0);
+      const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_TSTART, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -393,20 +397,20 @@ export class server {
    tlevel(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.init === 0) {
          return "";
       }
 
-      offset = block_add_size(buffer, offset, offset, DBX_DSORT_DATA, DBX_DTYPE_INT);
-      offset = block_add_size(buffer, offset, buffer.length, DBX_DSORT_DATA, DBX_DTYPE_INT);
-      offset = block_add_size(buffer, offset, this.index, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, offset, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, this.buffer[bidx].length, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, this.index, DBX_DSORT_DATA, DBX_DTYPE_INT);
 
-      offset = block_add_string(buffer, offset, "", 0, DBX_DSORT_EOD, DBX_DTYPE_STR);
-      add_head(buffer, 0, offset, DBX_CMND_TLEVEL);
+      offset = block_add_string(this.buffer[bidx], offset, "", 0, DBX_DSORT_EOD, DBX_DTYPE_STR);
+      add_head(this.buffer[bidx], 0, offset, DBX_CMND_TLEVEL);
 
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_TLEVEL, 0);
+      const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_TLEVEL, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -415,20 +419,20 @@ export class server {
    tcommit(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.init === 0) {
          return "";
       }
 
-      offset = block_add_size(buffer, offset, offset, DBX_DSORT_DATA, DBX_DTYPE_INT);
-      offset = block_add_size(buffer, offset, buffer.length, DBX_DSORT_DATA, DBX_DTYPE_INT);
-      offset = block_add_size(buffer, offset, this.index, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, offset, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, this.buffer[bidx].length, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, this.index, DBX_DSORT_DATA, DBX_DTYPE_INT);
 
-      offset = block_add_string(buffer, offset, "", 0, DBX_DSORT_EOD, DBX_DTYPE_STR);
-      add_head(buffer, 0, offset, DBX_CMND_TCOMMIT);
+      offset = block_add_string(this.buffer[bidx], offset, "", 0, DBX_DSORT_EOD, DBX_DTYPE_STR);
+      add_head(this.buffer[bidx], 0, offset, DBX_CMND_TCOMMIT);
 
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_TCOMMIT, 0);
+      const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_TCOMMIT, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -437,20 +441,20 @@ export class server {
    trollback(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.init === 0) {
          return "";
       }
 
-      offset = block_add_size(buffer, offset, offset, DBX_DSORT_DATA, DBX_DTYPE_INT);
-      offset = block_add_size(buffer, offset, buffer.length, DBX_DSORT_DATA, DBX_DTYPE_INT);
-      offset = block_add_size(buffer, offset, this.index, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, offset, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, this.buffer[bidx].length, DBX_DSORT_DATA, DBX_DTYPE_INT);
+      offset = block_add_size(this.buffer[bidx], offset, this.index, DBX_DSORT_DATA, DBX_DTYPE_INT);
 
-      offset = block_add_string(buffer, offset, "", 0, DBX_DSORT_EOD, DBX_DTYPE_STR);
-      add_head(buffer, 0, offset, DBX_CMND_TROLLBACK);
+      offset = block_add_string(this.buffer[bidx], offset, "", 0, DBX_DSORT_EOD, DBX_DTYPE_STR);
+      add_head(this.buffer[bidx], 0, offset, DBX_CMND_TROLLBACK);
 
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_TROLLBACK, 0);
+      const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_TROLLBACK, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -459,14 +463,14 @@ export class server {
    function(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.init === 0) {
          return "";
       }
 
-      offset = pack_arguments(buffer, offset, this.index, args, DBX_CMND_FUNCTION, 0);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_FUNCTION, 0);
+      offset = pack_arguments(this.buffer[bidx], offset, this.index, args, DBX_CMND_FUNCTION, 0);
+      const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_FUNCTION, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -475,14 +479,14 @@ export class server {
    classmethod(...args: any[]): any {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.init === 0) {
          return "";
       }
 
-      offset = pack_arguments(buffer, offset, this.index, args, DBX_CMND_CCMETH, 0);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_CCMETH, 0);
+      offset = pack_arguments(this.buffer[bidx], offset, this.index, args, DBX_CMND_CCMETH, 0);
+      const ret = dylib.symbols.mgdeno_command(this.buffer[bidx], offset, DBX_CMND_CCMETH, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       if (result.type === DBX_DTYPE_OREF) {
@@ -497,15 +501,24 @@ export class server {
 
    benchmark(...args: any[]): string {
       let i = 0;
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
-      let istring = "input string";
+      let bidx = 0;
+
+      if (this.init === 0) {
+         const ret = dylib.symbols.mgdeno_init();
+         this.init ++;
+      }
+      if (args.length < 1) {
+         return "";
+      }
+
+      let istring = args[0];
 
       for (i = 0; i < istring.length; i ++) {
-         buffer[i] = istring.charCodeAt(i);
+         this.buffer[bidx][i] = istring.charCodeAt(i);
       }
-      buffer[i] = 0;
+      this.buffer[bidx][i] = 0;
 
-      const ret = dylib.symbols.mgdeno_benchmark(buffer, i, 0, 0);
+      const ret = dylib.symbols.mgdeno_benchmark(this.buffer[bidx], i, 0, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       return data_view.getCString();
    }
@@ -532,15 +545,15 @@ export class mglobal {
    set(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.db.init === 0) {
          return "";
       }
 
-      offset = block_copy(buffer, offset, this.base_buffer, 0, this.base_offset);
-      offset = pack_arguments(buffer, offset, this.db.index, args, DBX_CMND_GSET, 1);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GSET, 0);
+      offset = block_copy(this.db.buffer[bidx], offset, this.base_buffer, 0, this.base_offset);
+      offset = pack_arguments(this.db.buffer[bidx], offset, this.db.index, args, DBX_CMND_GSET, 1);
+      const ret = dylib.symbols.mgdeno_command(this.db.buffer[bidx], offset, DBX_CMND_GSET, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -549,15 +562,15 @@ export class mglobal {
    get(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.db.init === 0) {
          return "";
       }
 
-      offset = block_copy(buffer, offset, this.base_buffer, 0, this.base_offset);
-      offset = pack_arguments(buffer, offset, this.db.index, args, DBX_CMND_GGET, 1);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GGET, 0);
+      offset = block_copy(this.db.buffer[bidx], offset, this.base_buffer, 0, this.base_offset);
+      offset = pack_arguments(this.db.buffer[bidx], offset, this.db.index, args, DBX_CMND_GGET, 1);
+      const ret = dylib.symbols.mgdeno_command(this.db.buffer[bidx], offset, DBX_CMND_GGET, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -566,15 +579,15 @@ export class mglobal {
    delete(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.db.init === 0) {
          return "";
       }
 
-      offset = block_copy(buffer, offset, this.base_buffer, 0, this.base_offset);
-      offset = pack_arguments(buffer, offset, this.db.index, args, DBX_CMND_GDELETE, 1);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GDELETE, 0);
+      offset = block_copy(this.db.buffer[bidx], offset, this.base_buffer, 0, this.base_offset);
+      offset = pack_arguments(this.db.buffer[bidx], offset, this.db.index, args, DBX_CMND_GDELETE, 1);
+      const ret = dylib.symbols.mgdeno_command(this.db.buffer[bidx], offset, DBX_CMND_GDELETE, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -583,15 +596,15 @@ export class mglobal {
    defined(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.db.init === 0) {
          return "";
       }
 
-      offset = block_copy(buffer, offset, this.base_buffer, 0, this.base_offset);
-      offset = pack_arguments(buffer, offset, this.db.index, args, DBX_CMND_GDEFINED, 1);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GDEFINED, 0);
+      offset = block_copy(this.db.buffer[bidx], offset, this.base_buffer, 0, this.base_offset);
+      offset = pack_arguments(this.db.buffer[bidx], offset, this.db.index, args, DBX_CMND_GDEFINED, 1);
+      const ret = dylib.symbols.mgdeno_command(this.db.buffer[bidx], offset, DBX_CMND_GDEFINED, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -600,15 +613,15 @@ export class mglobal {
    next(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.db.init === 0) {
          return "";
       }
 
-      offset = block_copy(buffer, offset, this.base_buffer, 0, this.base_offset);
-      offset = pack_arguments(buffer, offset, this.db.index, args, DBX_CMND_GNEXT, 1);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GNEXT, 0);
+      offset = block_copy(this.db.buffer[bidx], offset, this.base_buffer, 0, this.base_offset);
+      offset = pack_arguments(this.db.buffer[bidx], offset, this.db.index, args, DBX_CMND_GNEXT, 1);
+      const ret = dylib.symbols.mgdeno_command(this.db.buffer[bidx], offset, DBX_CMND_GNEXT, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -617,15 +630,15 @@ export class mglobal {
    previous(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.db.init === 0) {
          return "";
       }
 
-      offset = block_copy(buffer, offset, this.base_buffer, 0, this.base_offset);
-      offset = pack_arguments(buffer, offset, this.db.index, args, DBX_CMND_GPREVIOUS, 1);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GPREVIOUS, 0);
+      offset = block_copy(this.db.buffer[bidx], offset, this.base_buffer, 0, this.base_offset);
+      offset = pack_arguments(this.db.buffer[bidx], offset, this.db.index, args, DBX_CMND_GPREVIOUS, 1);
+      const ret = dylib.symbols.mgdeno_command(this.db.buffer[bidx], offset, DBX_CMND_GPREVIOUS, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -634,15 +647,15 @@ export class mglobal {
    increment(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.db.init === 0) {
          return "";
       }
 
-      offset = block_copy(buffer, offset, this.base_buffer, 0, this.base_offset);
-      offset = pack_arguments(buffer, offset, this.db.index, args, DBX_CMND_GINCREMENT, 1);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GINCREMENT, 0);
+      offset = block_copy(this.db.buffer[bidx], offset, this.base_buffer, 0, this.base_offset);
+      offset = pack_arguments(this.db.buffer[bidx], offset, this.db.index, args, DBX_CMND_GINCREMENT, 1);
+      const ret = dylib.symbols.mgdeno_command(this.db.buffer[bidx], offset, DBX_CMND_GINCREMENT, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -651,15 +664,15 @@ export class mglobal {
    lock(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.db.init === 0) {
          return "";
       }
 
-      offset = block_copy(buffer, offset, this.base_buffer, 0, this.base_offset);
-      offset = pack_arguments(buffer, offset, this.db.index, args, DBX_CMND_GLOCK, 1);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GLOCK, 0);
+      offset = block_copy(this.db.buffer[bidx], offset, this.base_buffer, 0, this.base_offset);
+      offset = pack_arguments(this.db.buffer[bidx], offset, this.db.index, args, DBX_CMND_GLOCK, 1);
+      const ret = dylib.symbols.mgdeno_command(this.db.buffer[bidx], offset, DBX_CMND_GLOCK, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -668,15 +681,15 @@ export class mglobal {
    unlock(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.db.init === 0) {
          return "";
       }
 
-      offset = block_copy(buffer, offset, this.base_buffer, 0, this.base_offset);
-      offset = pack_arguments(buffer, offset, this.db.index, args, DBX_CMND_GUNLOCK, 1);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GUNLOCK, 0);
+      offset = block_copy(this.db.buffer[bidx], offset, this.base_buffer, 0, this.base_offset);
+      offset = pack_arguments(this.db.buffer[bidx], offset, this.db.index, args, DBX_CMND_GUNLOCK, 1);
+      const ret = dylib.symbols.mgdeno_command(this.db.buffer[bidx], offset, DBX_CMND_GUNLOCK, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -687,32 +700,32 @@ export class mglobal {
       let sort = 0;
       let str = "";
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.db.init === 0) {
          return "";
       }
 
-      offset = block_copy(buffer, offset, this.base_buffer, 0, this.base_offset);
+      offset = block_copy(this.db.buffer[bidx], offset, this.base_buffer, 0, this.base_offset);
 
       for (let argn = 0; argn < args.length; argn ++) {
          if (typeof args[argn] === "object" && args[argn].constructor.name == "mglobal") {
-            offset = block_copy(buffer, offset, args[argn].base_buffer, 15, args[argn].base_offset);
+            offset = block_copy(this.db.buffer[bidx], offset, args[argn].base_buffer, 15, args[argn].base_offset);
          }
          else if (typeof args[argn] === "string") {
             str = args[argn];
-            offset = block_add_string(buffer, offset, str, str.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
+            offset = block_add_string(this.db.buffer[bidx], offset, str, str.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
          }
          else {
             str = args[argn].toString();
-            offset = block_add_string(buffer, offset, str, str.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
+            offset = block_add_string(this.db.buffer[bidx], offset, str, str.length, DBX_DSORT_DATA, DBX_DTYPE_STR);
          }
       }
 
-      offset = block_add_string(buffer, offset, "", 0, DBX_DSORT_EOD, DBX_DTYPE_STR)
-      add_head(buffer, 0, offset, DBX_CMND_GMERGE);
+      offset = block_add_string(this.db.buffer[bidx], offset, "", 0, DBX_DSORT_EOD, DBX_DTYPE_STR)
+      add_head(this.db.buffer[bidx], 0, offset, DBX_CMND_GMERGE);
 
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_GMERGE, 0);
+      const ret = dylib.symbols.mgdeno_command(this.db.buffer[bidx], offset, DBX_CMND_GMERGE, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -752,10 +765,10 @@ export class mclass {
          if (args.length > 1 && this.db.init > 0) {
             let offset = 0;
             let result = { data: "", error_message: "", type: 0 };
-            const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+            let bidx = 0;
 
-            offset = pack_arguments(buffer, offset, db.index, args, DBX_CMND_CCMETH, 0);
-            const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_CCMETH, 0);
+            offset = pack_arguments(this.db.buffer[bidx], offset, db.index, args, DBX_CMND_CCMETH, 0);
+            const ret = dylib.symbols.mgdeno_command(this.db.buffer[bidx], offset, DBX_CMND_CCMETH, 0);
             const data_view = new Deno.UnsafePointerView(ret);
             get_result(data_view, result);
             if (result.type === DBX_DTYPE_OREF) {
@@ -769,15 +782,15 @@ export class mclass {
    classmethod(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.db.init === 0) {
          return "";
       }
 
-      offset = block_copy(buffer, offset, this.base_buffer, 0, this.base_offset);
-      offset = pack_arguments(buffer, offset, this.db.index, args, DBX_CMND_CCMETH, 1);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_CCMETH, 0);
+      offset = block_copy(this.db.buffer[bidx], offset, this.base_buffer, 0, this.base_offset);
+      offset = pack_arguments(this.db.buffer[bidx], offset, this.db.index, args, DBX_CMND_CCMETH, 1);
+      const ret = dylib.symbols.mgdeno_command(this.db.buffer[bidx], offset, DBX_CMND_CCMETH, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       if (result.type === DBX_DTYPE_OREF) {
@@ -789,16 +802,16 @@ export class mclass {
    method(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.db.init === 0) {
          return "";
       }
 
-      offset = block_copy(buffer, offset, this.base_buffer, 0, 15);
-      offset = block_add_string(buffer, offset, this.oref, this.oref.length, DBX_DSORT_DATA, DBX_DTYPE_OREF);
-      offset = pack_arguments(buffer, offset, this.db.index, args, DBX_CMND_CMETH, 1);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_CMETH, 0);
+      offset = block_copy(this.db.buffer[bidx], offset, this.base_buffer, 0, 15);
+      offset = block_add_string(this.db.buffer[bidx], offset, this.oref, this.oref.length, DBX_DSORT_DATA, DBX_DTYPE_OREF);
+      offset = pack_arguments(this.db.buffer[bidx], offset, this.db.index, args, DBX_CMND_CMETH, 1);
+      const ret = dylib.symbols.mgdeno_command(this.db.buffer[bidx], offset, DBX_CMND_CMETH, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -807,16 +820,16 @@ export class mclass {
    getproperty(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.db.init === 0) {
          return "";
       }
 
-      offset = block_copy(buffer, offset, this.base_buffer, 0, 15);
-      offset = block_add_string(buffer, offset, this.oref, this.oref.length, DBX_DSORT_DATA, DBX_DTYPE_OREF);
-      offset = pack_arguments(buffer, offset, this.db.index, args, DBX_CMND_CGETP, 1);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_CGETP, 0);
+      offset = block_copy(this.db.buffer[bidx], offset, this.base_buffer, 0, 15);
+      offset = block_add_string(this.db.buffer[bidx], offset, this.oref, this.oref.length, DBX_DSORT_DATA, DBX_DTYPE_OREF);
+      offset = pack_arguments(this.db.buffer[bidx], offset, this.db.index, args, DBX_CMND_CGETP, 1);
+      const ret = dylib.symbols.mgdeno_command(this.db.buffer[bidx], offset, DBX_CMND_CGETP, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -825,16 +838,16 @@ export class mclass {
    setproperty(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.db.init === 0) {
          return "";
       }
 
-      offset = block_copy(buffer, offset, this.base_buffer, 0, 15);
-      offset = block_add_string(buffer, offset, this.oref, this.oref.length, DBX_DSORT_DATA, DBX_DTYPE_OREF);
-      offset = pack_arguments(buffer, offset, this.db.index, args, DBX_CMND_CSETP, 1);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_CSETP, 0);
+      offset = block_copy(this.db.buffer[bidx], offset, this.base_buffer, 0, 15);
+      offset = block_add_string(this.db.buffer[bidx], offset, this.oref, this.oref.length, DBX_DSORT_DATA, DBX_DTYPE_OREF);
+      offset = pack_arguments(this.db.buffer[bidx], offset, this.db.index, args, DBX_CMND_CSETP, 1);
+      const ret = dylib.symbols.mgdeno_command(this.db.buffer[bidx], offset, DBX_CMND_CSETP, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -843,16 +856,16 @@ export class mclass {
    closeinstance(...args: any[]): string {
       let offset = 0;
       let result = { data: "", error_message: "", type: 0 };
-      const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+      let bidx = 0;
 
       if (this.db.init === 0) {
          return "";
       }
 
-      offset = block_copy(buffer, offset, this.base_buffer, 0, 15);
-      offset = block_add_string(buffer, offset, this.oref, this.oref.length, DBX_DSORT_DATA, DBX_DTYPE_OREF);
-      offset = pack_arguments(buffer, offset, this.db.index, args, DBX_CMND_CCLOSE, 1);
-      const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_CCLOSE, 0);
+      offset = block_copy(this.db.buffer[bidx], offset, this.base_buffer, 0, 15);
+      offset = block_add_string(this.db.buffer[bidx], offset, this.oref, this.oref.length, DBX_DSORT_DATA, DBX_DTYPE_OREF);
+      offset = pack_arguments(this.db.buffer[bidx], offset, this.db.index, args, DBX_CMND_CCLOSE, 1);
+      const ret = dylib.symbols.mgdeno_command(this.db.buffer[bidx], offset, DBX_CMND_CCLOSE, 0);
       const data_view = new Deno.UnsafePointerView(ret);
       get_result(data_view, result);
       return result.data;
@@ -871,10 +884,10 @@ export class mclass {
          if (args.length > 1 && this.db.init > 0) {
             let offset = 0;
             let result = { data: "", error_message: "", type: 0 };
-            const buffer = new Uint8Array(DBX_INPUT_BUFFER_SIZE);
+            let bidx = 0;
 
-            offset = pack_arguments(buffer, offset, this.db.index, args, DBX_CMND_CCMETH, 0);
-            const ret = dylib.symbols.mgdeno_command(buffer, offset, DBX_CMND_CCMETH, 0);
+            offset = pack_arguments(this.db.buffer[bidx], offset, this.db.index, args, DBX_CMND_CCMETH, 0);
+            const ret = dylib.symbols.mgdeno_command(this.db.buffer[bidx], offset, DBX_CMND_CCMETH, 0);
             const data_view = new Deno.UnsafePointerView(ret);
             get_result(data_view, result);
             if (result.type === DBX_DTYPE_OREF) {
