@@ -3,7 +3,7 @@
 High speed Synchronous and Asynchronous access to InterSystems Cache/IRIS and YottaDB from Deno.
 
 Chris Munt <cmunt@mgateway.com>  
-15 June 2022, M/Gateway Developments Ltd [http://www.mgateway.com](http://www.mgateway.com)
+20 July 2022, M/Gateway Developments Ltd [http://www.mgateway.com](http://www.mgateway.com)
 
 * Two connectivity models to the InterSystems or YottaDB database are provided: High performance via the local database API or network based.
 * The status of this module is very much 'work in progress' - use with care!  In the fullness of time, it is envisaged that **mg\_deno** will contain the same functionality as, and be compatible with, **mg-dbx** (our addon for Node.js).
@@ -69,7 +69,7 @@ The M support routines are required for:
 
 * Network based access to databases.
 * (*for the future*) Direct access to SQL (either via the API or via the network).
-* (*for the future*) The Merge command under YottaDB (either via the API or via the network).
+* The Merge command under YottaDB (either via the API or via the network).
 
 Two M routines need to be installed (%zmgsi and %zmgsis).  These can be found in the *Service Integration Gateway* (**mgsi**) GitHub source code repository ([https://github.com/chrisemunt/mgsi](https://github.com/chrisemunt/mgsi)).  Note that it is not necessary to install the whole *Service Integration Gateway*, just the two M routines held in that repository.
 
@@ -676,3 +676,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 ### v1.1.2 (15 June 2022)
 
 * Introduce the **mglobal** and **mclass** classes - designed to be compatible with the equivalent classes in **mg-dbx**.
+
+### v1.1.3 (20 July 2022)
+
+* Performance improvements.
