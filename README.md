@@ -3,7 +3,7 @@
 High speed Synchronous and Asynchronous access to InterSystems Cache/IRIS and YottaDB from Deno.
 
 Chris Munt <cmunt@mgateway.com>  
-20 July 2022, M/Gateway Developments Ltd [http://www.mgateway.com](http://www.mgateway.com)
+23 June 2023, MGateway Ltd [http://www.mgateway.com](http://www.mgateway.com)
 
 * Two connectivity models to the InterSystems or YottaDB database are provided: High performance via the local database API or network based.
 * The status of this module is very much 'work in progress' - use with care!  In the fullness of time, it is envisaged that **mg\_deno** will contain the same functionality as, and be compatible with, **mg-dbx** (our addon for Node.js).
@@ -83,8 +83,8 @@ Change to your development UCI and check the installation:
 
        do ^%zmgsi
 
-       M/Gateway Developments Ltd - Service Integration Gateway
-       Version: 4.5; Revision 27 (1 March 2022)
+       MGateway Ltd - Service Integration Gateway
+       Version: 4.5; Revision 28 (3 February 2023)
 
 
 #### Installation for YottaDB
@@ -112,8 +112,8 @@ Link all the **zmgsi** routines and check the installation:
 
        do ^%zmgsi
 
-       M/Gateway Developments Ltd - Service Integration Gateway
-       Version: 4.5; Revision 27 (1 March 2022)
+       MGateway Ltd - Service Integration Gateway
+       Version: 4.5; Revision 28 (3 February 2023)
 
 Note that the version of **zmgsi** is successfully displayed.
 
@@ -653,7 +653,7 @@ Example 2 Reset a container to hold an existing instance (object %Id of 2):
 
 ## <a name="License"></a> License
 
-Copyright (c) 2021-2022 M/Gateway Developments Ltd,
+Copyright (c) 2021-2023 MGateway Ltd,
 Surrey UK.                                                      
 All rights reserved.
  
@@ -680,3 +680,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 ### v1.1.3 (20 July 2022)
 
 * Performance improvements.
+
+### v1.1.3a (23 June 2023)
+
+* Documentation update.
