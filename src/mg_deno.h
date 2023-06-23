@@ -5,7 +5,7 @@
    |              and YottaDB API                                             |
    | Author:      Chris Munt cmunt@mgateway.com                               |
    |                         chris.e.munt@gmail.com                           |
-   | Copyright (c) 2021-2022 M/Gateway Developments Ltd,                      |
+   | Copyright (c) 2019-2023 MGateway Ltd                                     |
    | Surrey UK.                                                               |
    | All rights reserved.                                                     |
    |                                                                          |
@@ -39,11 +39,11 @@
 #define MGDENO_VERSION_BUILD     "3"
 
 #define MGDENO_VERSION           MGDENO_VERSION_MAJOR "." MGDENO_VERSION_MINOR "." MGDENO_VERSION_BUILD
-#define MGDENO_COMPANYNAME       "M/Gateway Developments Ltd\0"
+#define MGDENO_COMPANYNAME       "MGateway Ltd\0"
 #define MGDENO_FILEDESCRIPTION   "API Abstraction for InterSystems IRIS/Cache and YottaDB\0"
 #define MGDENO_FILEVERSION       MGDENO_VERSION
 #define MGDENO_INTERNALNAME      "mg_deno\0"
-#define MGDENO_LEGALCOPYRIGHT    "Copyright 2021-2022, M/Gateway Developments Ltd\0"
+#define MGDENO_LEGALCOPYRIGHT    "Copyright 2021-2023, MGateway Ltd\0"
 #define MGDENO_ORIGINALFILENAME  "mg_deno\0"
 #define MGDENO_PLATFORM          PROCESSOR_ARCHITECTURE
 #define MGDENO_PRODUCTNAME       "mg_deno\0"

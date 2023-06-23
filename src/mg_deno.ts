@@ -5,7 +5,7 @@
 //   | Description: An Interface to InterSystems Cache/IRIS and YottaDB         |
 //   | Author:      Chris Munt cmunt@mgateway.com                               |
 //   |                         chris.e.munt@gmail.com                           |
-//   | Copyright (c) 2021-2022 M/Gateway Developments Ltd,                      |
+//   | Copyright (c) 2021-2023 MGateway Ltd                                     |
 //   | Surrey UK.                                                               |
 //   | All rights reserved.                                                     |
 //   |                                                                          |

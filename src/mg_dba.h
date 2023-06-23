@@ -5,7 +5,7 @@
    |              and YottaDB API                                             |
    | Author:      Chris Munt cmunt@mgateway.com                               |
    |                         chris.e.munt@gmail.com                           |
-   | Copyright (c) 2017-2022 M/Gateway Developments Ltd,                      |
+   | Copyright (c) 2019-2023 MGateway Ltd                                     |
    | Surrey UK.                                                               |
    | All rights reserved.                                                     |
    |                                                                          |
@@ -110,8 +110,8 @@
 #endif
 
 
-#ifndef INCL_WINSOCK_API_TYPEDEFS
-#define MG_USE_MS_TYPEDEFS 1
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /* Cache/IRIS */
@@ -1367,6 +1367,10 @@ int                     mg_replace_substrings         (char * tbuffer, char *fbu
 int                     mg_bind_server_api            (MGSRV *p_srv, short context);
 int                     mg_release_server_api         (MGSRV *p_srv, short context);
 int                     mg_invoke_server_api          (MGSRV *p_srv, int chndle, MGBUF *p_buf, int size, int mode);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

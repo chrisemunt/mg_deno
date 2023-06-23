@@ -5,7 +5,7 @@
    |              and YottaDB API                                             |
    | Author:      Chris Munt cmunt@mgateway.com                               |
    |                         chris.e.munt@gmail.com                           |
-   | Copyright (c) 2021-2022 M/Gateway Developments Ltd,                      |
+   | Copyright (c) 2019-2023 MGateway Ltd                                     |
    | Surrey UK.                                                               |
    | All rights reserved.                                                     |
    |                                                                          |
@@ -37,6 +37,9 @@ Version 1.1.2 15 June 2022:
 
 Version 1.1.3 20 July 2022:
    Performance improvements.
+
+Version 1.1.3a 23 June 2023:
+   Documentation update.
 
 */
 
